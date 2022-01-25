@@ -1,42 +1,12 @@
 import appConfig from '../config.json'
 import { Box, Button, Text, TextField, Image } from '@skynexui/components'
-
-function GlobalStyle() {
-    return (
-        <style global jsx>
-            {`
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-                list-style: none;
-              }
-              body {
-                font-family: 'Open Sans', sans-serif;
-              }
-              /* App fit Height */ 
-              html, body, #__next {
-                min-height: 100vh;
-                display: flex;
-                flex: 1;
-              }
-              #__next {
-                flex: 1;
-              }
-              #__next > * {
-                flex: 1;
-              }
-              /* ./App fit Height */ 
-            `}
-        </style>
-    )
-}
+import { useState } from 'react'
+import { useRouter } from 'next/router'
 
 function Titulo(props) {
     const Tag = props.tag || 'h1'
     return (
         <>
-            <GlobalStyle />
             <Tag>{props.children}</Tag>
             <style jsx>
                 {
@@ -54,11 +24,11 @@ function Titulo(props) {
 }
 
 export default function PaginaInicial() {
-    const username = 'fabioSP';
+    const [username, setUsername] = useState(appConfig.name.substring(appConfig.name.indexOf("(") + 1, appConfig.name.indexOf(")")))
+    const router = useRouter()
 
     return (
         <>
-            <GlobalStyle />
             <Box
                 styleSheet={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -85,6 +55,10 @@ export default function PaginaInicial() {
                     {/* Formulário */}
                     <Box
                         as="form"
+                        onSubmit={evt => {
+                            evt.preventDefault()
+                            router.push("/chat")
+                        }}
                         styleSheet={{
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                             width: { xs: '100%', sm: '50%' }, textAlign: 'center', marginBottom: '32px',
@@ -105,7 +79,10 @@ export default function PaginaInicial() {
                                     backgroundColor: appConfig.theme.colors.neutrals[800],
                                 },
                             }}
+                            value={username}
+                            onChange={evt => setUsername(evt.target.value)}
                         />
+
                         <Button
                             type='submit'
                             label='Entrar'
@@ -137,13 +114,19 @@ export default function PaginaInicial() {
                             minHeight: '240px',
                         }}
                     >
-                        <Image
-                            styleSheet={{
-                                borderRadius: '50%',
-                                marginBottom: '16px',
-                            }}
-                            src={`https://github.com/${username}.png`}
-                        />
+                        {
+                            username.length >= 2?
+                            (
+                                    <Image
+                                        styleSheet={{
+                                            borderRadius: '50%',
+                                            marginBottom: '16px',
+                                        }}
+                                        src={`https://github.com/${username}.png`}
+                                    />
+                            ) : (<></>)
+                        }
+
                         <Text
                             variant="body4"
                             styleSheet={{
