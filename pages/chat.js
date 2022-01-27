@@ -1,18 +1,39 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import appConfig from '../config.json';
+import { createClient } from '@supabase/supabase-js'
+import ContentLoader from "react-content-loader"
+
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzI5MDczNywiZXhwIjoxOTU4ODY2NzM3fQ.Xbn2sw7mGrmc6wtGJJVzN2nktGCB77M8ohXpQQYzcws'
+const SUPABASE_URL = 'https://ymiuysizsyzcjqfzcbqz.supabase.co'
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 export default function ChatPage() {
     // Sua lógica vai aqui
     const [mensagens, setMensagens] = useState([{
-        id: Math.random(),
+        // id: Math.random(),
         texto: 'Hello',
-        de: 'Malucao'
+        de: 'Truta'
     }])
     const [mensagem, setMensagem] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
+
+    useEffect(() =>
+    {
+        setIsLoading(true)
+        supabaseClient.from('mensagens')
+            .select('*').order('id', { ascending: false }).then( ({ data }) => {
+                setMensagens(data)
+                setTimeout(setIsLoading(false), 3000)
+            })
+    }, [])
 
     const handleAddMessage = msg => {
-        setMensagens([{ id: Math.random(), texto: msg, de: 'Truta' }, ...mensagens])
+        supabaseClient.from('mensagens')
+            .insert([{ texto: msg, de: 'Truta' }]).then(({ data }) => {
+                setMensagens([data[0], ...mensagens])
+            })
+
         setMensagem('')
     }
 
@@ -59,7 +80,7 @@ export default function ChatPage() {
                     }}
                 >
 
-                    <MessageList mensagens={mensagens} removeItem={removeFromMessageList} />
+                    <MessageList mensagens={mensagens} removeItem={removeFromMessageList} loading={isLoading} />
 
                     <Box
                         as="form"
@@ -116,8 +137,8 @@ function Header() {
 }
 
 function MessageList(props) {
-    const {mensagens, removeItem} = props
-    console.log(`Msg: ${mensagens}`)
+    const {mensagens, removeItem, loading} = props
+    // console.log(`Msg: ${mensagens}`)
     return (
         <Box
             tag="ul"
@@ -132,7 +153,7 @@ function MessageList(props) {
         >
             {
                 mensagens.map(mensagem => (
-                    <React.Fragment key={mensagem.id}>
+                    <React.Fragment key={Math.random()}>
                         <Text
                             tag="li"
                             styleSheet={{
@@ -144,50 +165,74 @@ function MessageList(props) {
                                 }
                             }}
                         >
-                            <Box
-                                styleSheet={{
-                                    marginBottom: '8px',
-                                }}
-                            >
-                                <Image
-                                    styleSheet={{
-                                        width: '20px',
-                                        height: '20px',
-                                        borderRadius: '50%',
-                                        display: 'inline-block',
-                                        marginRight: '8px',
-                                    }}
-                                    src={`https://github.com/vanessametonini.png`}
-                                />
-                                <Text tag="strong">
-                                    {mensagem.de}
-                                </Text>
-                                <Text
-                                    styleSheet={{
-                                        fontSize: '10px',
-                                        marginLeft: '8px',
-                                        color: appConfig.theme.colors.neutrals[300],
-                                    }}
-                                    tag="span"
-                                >
-                                    {(new Date().toLocaleDateString().toString())}
-                                </Text>
-                            </Box>
-                            <Box styleSheet={{ width: '100%', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <Text>
-                                    {mensagem.texto}
-                                </Text>
-                                <Button
-                                    variant='tertiary'
-                                    colorVariant='neutral'
-                                    label='X'
-                                    onClick={() => removeItem(mensagem.id)}
-                                    styleSheet={{ marginRight: '50px' }} />
-                            </Box>
+                            {
+                                loading ? <MyLoader /> : <>
+                                    <Box
+                                        styleSheet={{
+                                            marginBottom: '8px',
+                                        }}
+                                    >
+                                        <Image
+                                            onMouseOver={() => alert("oi")}
+                                            styleSheet={{
+                                                width: '20px',
+                                                height: '20px',
+                                                borderRadius: '50%',
+                                                display: 'inline-block',
+                                                marginRight: '8px',
+                                            }}
+                                            src={`https://github.com/${mensagem.de}.png`}
+                                        />
+                                        <Text tag="strong">
+                                            {mensagem.de}
+                                        </Text>
+                                        <Text
+                                            styleSheet={{
+                                                fontSize: '10px',
+                                                marginLeft: '8px',
+                                                color: appConfig.theme.colors.neutrals[300],
+                                            }}
+                                            tag="span"
+                                        >
+                                            {(new Date().toLocaleDateString().toString())}
+                                        </Text>
+                                    </Box>
+                                    <Box styleSheet={{ width: '100%', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <Text>
+                                            {mensagem.texto}
+                                        </Text>
+                                        <Button
+                                            variant='tertiary'
+                                            colorVariant='neutral'
+                                            label='X'
+                                            onClick={() => removeItem(mensagem.id)}
+                                            styleSheet={{ marginRight: '50px' }} />
+                                    </Box>
+                                </>
+                            }
                         </Text>
                     </ React.Fragment>
                 ))
             }
         </Box>
+    )
+}
+
+function MyLoader(props) {
+    return (
+        <ContentLoader
+            speed={2}
+            width={300.999}
+            height={100.542}
+            viewBox="0 0 300.999 100.542"
+            backgroundColor="#f3f3f3"
+            foregroundColor="#ecebeb"
+            {...props}
+        >
+            <circle cx="28" cy="26" r="22" />
+            <rect x="62" y="18" rx="0" ry="0" width="94" height="21" />
+            <rect x="173" y="26" rx="0" ry="0" width="88" height="9" />
+            <rect x="19" y="72" rx="0" ry="0" width="199" height="17" />
+        </ContentLoader>
     )
 }
